@@ -46,6 +46,12 @@ public class MailReceiver {
     @Autowired
     StringRedisTemplate redisTemplate;
 
+    /**
+     * RabbitListener注解含义：当队列已经存在时，直接指定队列名的方式消费
+     * @param message
+     * @param channel
+     * @throws IOException
+     */
     @RabbitListener(queues = MailConstants.MAIL_QUEUE_NAME)
     public void handler(Message message, Channel channel) throws IOException {
         Employee employee = (Employee) message.getPayload();

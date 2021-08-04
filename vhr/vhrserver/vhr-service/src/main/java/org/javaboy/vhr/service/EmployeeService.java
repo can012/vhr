@@ -52,6 +52,15 @@ public class EmployeeService {
         return bean;
     }
 
+
+    /**
+     * 当 hr 向系统中录入一个员工时，录入成功后，系统会自动向消息中间件 RabbitMQ 发送一条消息，
+     * 这条消息包含了新入职员工的基本信息，然后 mailserver 则专门用来从 RabbitMQ 上消费消息，
+     * 根据收到的消息，自动的发送一封入职欢迎邮件。
+     * ps:如果失败再通过定时任务 MailSendTask 对发送失败的消息进行重试
+     * @param employee
+     * @return
+     */
     public Integer addEmp(Employee employee) {
         Date beginContract = employee.getBeginContract();
         Date endContract = employee.getEndContract();
@@ -70,7 +79,8 @@ public class EmployeeService {
             mailSendLog.setEmpId(emp.getId());
             mailSendLog.setTryTime(new Date(System.currentTimeMillis() + 1000 * 60 * MailConstants.MSG_TIMEOUT));
             mailSendLogService.insert(mailSendLog);
-            rabbitTemplate.convertAndSend(MailConstants.MAIL_EXCHANGE_NAME, MailConstants.MAIL_ROUTING_KEY_NAME, emp, new CorrelationData(msgId));
+            rabbitTemplate.convertAndSend(MailConstants.MAIL_EXCHANGE_NAME,
+                    MailConstants.MAIL_ROUTING_KEY_NAME, emp, new CorrelationData(msgId));
         }
         return result;
     }
